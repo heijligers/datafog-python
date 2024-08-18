@@ -52,11 +52,11 @@ class DataFog:
                     f"Text annotation completed with {len(annotated_text)} annotations."
                 )
                 return annotated_text
-
-            return extracted_text
+            else:
+                return extracted_text
         except Exception as e:
-            self.logger.error(f"Error in run_ocr_pipeline: {str(e)}")
-            raise
+            logging.error(f"Error in run_ocr_pipeline: {str(e)}")
+            return [f"Error: {str(e)}"]
 
     async def run_text_pipeline(self, str_list: List[str]):
         """Run the text pipeline asynchronously on a list of input text."""

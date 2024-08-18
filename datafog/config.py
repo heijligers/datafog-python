@@ -13,12 +13,8 @@ class DataFogConfig(BaseSettings):
     api_key: str = os.environ.get("DATAFOG_API_KEY", "")
 
     # Base URLs for different services
-    annotator_base_url: HttpUrl = (
-        ""  # for ex, "https://datafog-api-prod.azurewebsites.net"
-    )
-    anonymizer_base_url: HttpUrl = (
-        ""  # for ex, "https://datafog-api-anonymizer-prod.azurewebsites.net"
-    )
+    annotator_base_url: HttpUrl = "http://localhost:8000"
+    anonymizer_base_url: HttpUrl = "http://localhost:8000"
 
     # Default language
     default_language: str = "en"

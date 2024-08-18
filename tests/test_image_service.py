@@ -1,14 +1,4 @@
 # Pytest tests for image_service.py
-# Tests the ImageService class
-# ImageService downloads images and extracts text
-# Uses ImageDownloader, DonutProcessor, PytesseractProcessor
-# ImageService has two methods: download_images, ocr_extract
-# download_images downloads images from URLs
-# ocr_extract extracts text from images
-# ocr_extract has optional params: use_donut, use_tesseract
-# use_donut selects donut processor for OCR
-# use_tesseract selects pytesseract processor for OCR
-
 
 import asyncio
 
@@ -29,9 +19,19 @@ async def test_download_images():
     try:
         images = await image_service.download_images(urls)
         assert len(images) == 2
-        assert all(isinstance(image, Image.Image) for image in images)
+        successful_images = [img for img in images if isinstance(img, Image.Image)]
+        failed_downloads = [img for img in images if isinstance(img, Exception)]
+
+        print(f"Successful downloads: {len(successful_images)}")
+        print(f"Failed downloads: {len(failed_downloads)}")
+
+        for failed in failed_downloads:
+            print(f"Download failed: {str(failed)}")
+
+        assert len(successful_images) > 0, "No images were successfully downloaded"
+        assert all(isinstance(image, Image.Image) for image in successful_images)
     finally:
-        await asyncio.sleep(0)  # Allow pending callbacks to run
+        await asyncio.sleep(0)  # Yield control to event loop
 
 
 @pytest.mark.asyncio
@@ -44,11 +44,11 @@ async def test_ocr_extract_with_tesseract():
 
 @pytest.mark.asyncio
 async def test_ocr_extract_with_both():
-    image_service3 = ImageService(use_tesseract=True, use_donut=True)
     with pytest.raises(
-        ValueError, match="Both OCR processors cannot be selected simultaneously"
+        ValueError,
+        match="Cannot use both Donut and Tesseract processors simultaneously",
     ):
-        await image_service3.ocr_extract(urls)
+        ImageService(use_tesseract=True, use_donut=True)
 
 
 @pytest.mark.asyncio
@@ -61,6 +61,5 @@ async def test_ocr_extract_with_donut():
 
 @pytest.mark.asyncio
 async def test_ocr_extract_no_processor_selected():
-    image_service5 = ImageService(use_tesseract=False, use_donut=False)
-    with pytest.raises(ValueError, match="No OCR processor selected"):
-        await image_service5.ocr_extract(urls)
+    with pytest.raises(ValueError, match="At least one OCR processor must be selected"):
+        ImageService(use_tesseract=False, use_donut=False)

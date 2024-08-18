@@ -43,6 +43,11 @@ setup(
         "typer==0.12.3",
     ],
     python_requires=">=3.10,<3.13",
+    entry_points={
+        "console_scripts": [
+            "datafog=datafog.client:app",
+        ],
+    },
     classifiers=[
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.11",
