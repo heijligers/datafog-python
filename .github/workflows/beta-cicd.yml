@@ -3,10 +3,10 @@ name: beta-cicd-setup-and-test
 on:
   push:
     branches:
-      - 'v*.0.0-beta.*'
+      - "v*.0.0-beta.*"
   pull_request:
     branches:
-      - 'v*.0.0-beta.*'
+      - "v*.0.0-beta.*"
 
 jobs:
   lint:
