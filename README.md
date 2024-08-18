@@ -17,10 +17,6 @@
   <a href="https://github.com/datafog/datafog-python/issues"><img src="https://img.shields.io/github/issues/datafog/datafog-python.svg?style=flat-square" alt="GitHub Issues"></a>
 </p>
 
-## Overview
-
-DataFog is an open-source DevSecOps platform that lets you scan and redact Personally Identifiable Information (PII) out of your Generative AI applications.
-
 ## Installation
 
 DataFog can be installed via pip:
@@ -28,6 +24,118 @@ DataFog can be installed via pip:
 ```
 pip install datafog
 ```
+
+For v4 we're introducing a CLI! see more details below.
+
+# DataFog CLI Usage
+
+> **🚀 Beta Release: v4.0.0-beta**
+>
+> This is a beta release of DataFog v4. Please report any issues or feedback to our [GitHub repository](https://github.com/datafog/datafog-python).
+
+---
+
+## 📚 Quick Reference
+
+| Command             | Description                          |
+| ------------------- | ------------------------------------ |
+| `scan-text`         | Analyze text for PII                 |
+| `scan-image`        | Extract and analyze text from images |
+| `health`            | Check service status                 |
+| `show-config`       | Display current settings             |
+| `download-model`    | Get a specific spaCy model           |
+| `list-spacy-models` | Show available models                |
+| `list-entities`     | View supported PII entities          |
+
+---
+
+## 🔍 Detailed Usage
+
+### Scanning Text
+
+To scan and annotate text for PII entities:
+
+```bash
+datafog scan-text "Your text here"
+```
+
+**Example:**
+
+```bash
+datafog scan-text "Tim Cook is the CEO of Apple and is based out of Cupertino, California"
+```
+
+### Scanning Images
+
+To extract text from images and optionally perform PII annotation:
+
+```bash
+datafog scan-image "path/to/image.png" --operations extract_text
+```
+
+**Example:**
+
+```bash
+datafog scan-image "nokia-statement.png" --operations extract_text
+```
+
+To extract text and annotate PII:
+
+```bash
+datafog scan-image "nokia-statement.png" --operations annotate_pii
+```
+
+### Utility Commands
+
+#### 🏥 Health Check
+
+```bash
+datafog health
+```
+
+#### ⚙️ Show Configuration
+
+```bash
+datafog show-config
+```
+
+#### 📥 Download Model
+
+```bash
+datafog download-model en_core_web_sm
+```
+
+#### 📂 Show Model Directory
+
+```bash
+datafog show-spacy-model-directory en_core_web_sm
+```
+
+#### 📋 List Models
+
+```bash
+datafog list-spacy-models
+```
+
+#### 🏷️ List Entities
+
+```bash
+datafog list-entities
+```
+
+---
+
+## ⚠️ Important Notes
+
+- For `scan-image` and `scan-text` commands, use `--operations` to specify different operations. Default is `annotate_pii`.
+- Process multiple images or text strings in a single command by providing multiple arguments.
+- Ensure proper permissions and configuration of the DataFog service before running commands.
+
+---
+
+💡 **Tip:** For more detailed information on each command, use the `--help` option, e.g., `datafog scan-text --help`.
+
+# TODO: Reorganize below
 
 ## Getting Started
 
