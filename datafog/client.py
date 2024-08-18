@@ -1,4 +1,8 @@
-# client.py
+"""
+Client module for DataFog.
+
+Provides CLI commands for scanning images and text using DataFog's OCR and PII detection capabilities.
+"""
 
 import asyncio
 import logging
@@ -25,7 +29,18 @@ def scan_image(
     ),
     operations: str = typer.Option("annotate_pii", help="Operation to perform"),
 ):
-    """Extract text from images."""
+    """
+    Scan images for text and PII.
+
+    Extracts text from images using OCR, then detects PII entities.
+    Handles both remote URLs and local file paths.
+
+    Args:
+        image_urls: List of image URLs or file paths
+        operations: Pipeline operations to run (default: annotate_pii)
+
+    Prints results or exits with error on failure.
+    """
     if not image_urls:
         typer.echo("No image URLs or file paths provided. Please provide at least one.")
         raise typer.Exit(code=1)
@@ -48,7 +63,17 @@ def scan_text(
     ),
     operations: str = typer.Option("annotate_pii", help="Operation to perform"),
 ):
-    """Annotate texts to detect PII entities."""
+    """
+    Scan texts for PII.
+
+    Detects PII entities in a list of input texts.
+
+    Args:
+        str_list: List of texts to analyze
+        operations: Pipeline operations to run (default: annotate_pii)
+
+    Prints results or exits with error on failure.
+    """
     if not str_list:
         typer.echo("No texts provided.")
         raise typer.Exit(code=1)
@@ -66,19 +91,34 @@ def scan_text(
 
 @app.command()
 def health():
-    """Check DataFog service health."""
+    """
+    Check DataFog service health.
+
+    Prints a message indicating that DataFog is running.
+    """
     typer.echo("DataFog is running.")
 
 
 @app.command()
 def show_config():
-    """Show current configuration."""
+    """
+    Show current configuration.
+
+    Prints the current DataFog configuration.
+    """
     typer.echo(get_config())
 
 
 @app.command()
 def download_model(model_name: str = typer.Argument(..., help="Model to download")):
-    """Download a model."""
+    """
+    Download a spaCy model.
+
+    Args:
+        model_name: Name of the model to download.
+
+    Prints a confirmation message after downloading.
+    """
     SpacyAnnotator.download_model(model_name)
     typer.echo(f"Model {model_name} downloaded.")
 
@@ -87,21 +127,36 @@ def download_model(model_name: str = typer.Argument(..., help="Model to download
 def show_spacy_model_directory(
     model_name: str = typer.Argument(..., help="Model to check")
 ):
-    """Show model path."""
+    """
+    Show the directory path for a spaCy model.
+
+    Args:
+        model_name: Name of the model to check.
+
+    Prints the directory path of the specified model.
+    """
     annotator = SpacyAnnotator(model_name)
     typer.echo(annotator.show_model_path())
 
 
 @app.command()
 def list_spacy_models():
-    """List available models."""
+    """
+    List available spaCy models.
+
+    Prints a list of all available spaCy models.
+    """
     annotator = SpacyAnnotator()
     typer.echo(annotator.list_models())
 
 
 @app.command()
 def list_entities():
-    """List available entities."""
+    """
+    List available entities.
+
+    Prints a list of all available entities that can be recognized.
+    """
     annotator = SpacyAnnotator()
     typer.echo(annotator.list_entities())
 

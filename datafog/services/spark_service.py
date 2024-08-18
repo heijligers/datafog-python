@@ -1,3 +1,10 @@
+"""
+Spark service for data processing and analysis.
+
+Provides a wrapper around PySpark functionality, including session creation,
+JSON reading, and package management.
+"""
+
 import importlib
 import json
 import subprocess
@@ -6,6 +13,13 @@ from typing import Any, List
 
 
 class SparkService:
+    """
+    Manages Spark operations and dependencies.
+
+    Initializes a Spark session, handles imports, and provides methods for
+    data reading and package installation.
+    """
+
     def __init__(self):
         self.spark = self.create_spark_session()
         self.ensure_installed("pyspark")

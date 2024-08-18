@@ -1,3 +1,9 @@
+"""
+Text processing service for PII annotation.
+
+Provides synchronous and asynchronous methods for annotating text with personally identifiable information (PII) using SpaCy. Supports chunking long texts and batch processing.
+"""
+
 import asyncio
 from typing import Dict, List
 
@@ -5,6 +11,12 @@ from datafog.processing.text_processing.spacy_pii_annotator import SpacyPIIAnnot
 
 
 class TextService:
+    """
+    Manages text annotation operations.
+
+    Handles text chunking, PII annotation, and result combination for both single texts and batches. Offers both synchronous and asynchronous interfaces.
+    """
+
     def __init__(self, text_chunk_length: int = 1000):
         self.annotator = SpacyPIIAnnotator.create()
         self.text_chunk_length = text_chunk_length

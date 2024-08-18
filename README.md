@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-    <b>Open-source DevSecOps for Generative AI Systems</b>. <br />
+    <b>Open-source PII Detection & Anonymization</b>. <br />
 </p>
 
 <p align="center">

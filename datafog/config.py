@@ -1,3 +1,10 @@
+"""
+Configuration module for DataFog.
+
+Defines settings and provides a global config instance.
+Includes API keys, URLs, timeouts, and other options.
+"""
+
 import os
 from enum import Enum
 from typing import Optional
@@ -7,7 +14,17 @@ from pydantic_settings import BaseSettings
 
 
 class DataFogConfig(BaseSettings):
-    """Configuration settings for DataFog SDK"""
+    """
+    Configuration settings for DataFog SDK.
+
+    This class defines all the configuration options used throughout the DataFog SDK.
+    It includes settings for API authentication, service URLs, timeouts, retries,
+    rate limiting, and logging. The configuration can be updated at runtime using
+    environment variables or programmatically via the update method.
+
+    All settings have default values that can be overridden as needed. The class
+    uses Pydantic for data validation and settings management.
+    """
 
     # API Keys and Authentication
     api_key: str = os.environ.get("DATAFOG_API_KEY", "")
@@ -60,6 +77,15 @@ def configure(**kwargs):
 
 
 class OperationType(str, Enum):
+    """
+    Enum for supported DataFog operations.
+
+    ANNOTATE_PII: Detect and annotate PII in text
+    EXTRACT_TEXT: Extract text from images
+    REDACT_PII: Remove PII from text
+    ANONYMIZE_PII: Replace PII with fake data
+    """
+
     ANNOTATE_PII = "annotate_pii"
     EXTRACT_TEXT = "extract_text"
     REDACT_PII = "redact_pii"

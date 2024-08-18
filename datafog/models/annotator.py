@@ -1,4 +1,10 @@
-# models/annotator.py
+"""
+Defines data models for annotation requests and results.
+
+Contains Pydantic models for structuring input, output, and explanations
+in the annotation process. Ensures type safety and consistent data handling.
+"""
+
 from typing import List, Optional
 
 from pydantic import BaseModel, field_validator
@@ -7,6 +13,13 @@ from .common import AnnotatorMetadata, EntityTypes, PatternRecognizer
 
 
 class AnnotatorRequest(BaseModel):
+    """
+    Represents an annotation request.
+
+    Contains text to annotate, language, and optional parameters
+    to customize the annotation process.
+    """
+
     text: str
     language: str
     correlation_id: Optional[str]
@@ -18,6 +31,12 @@ class AnnotatorRequest(BaseModel):
 
 
 class AnnotationResult(BaseModel):
+    """
+    Represents the result of an annotation.
+
+    Includes position, score, entity type, and optional metadata.
+    """
+
     start: int
     end: int
     score: float
@@ -33,6 +52,13 @@ class AnnotationResult(BaseModel):
 
 
 class AnalysisExplanation(BaseModel):
+    """
+    Provides detailed explanation of an annotation analysis.
+
+    Includes information about the recognizer, patterns, scores,
+    and context improvements.
+    """
+
     recognizer: str
     pattern_name: Optional[str]
     pattern: Optional[str]
@@ -45,4 +71,8 @@ class AnalysisExplanation(BaseModel):
 
 
 class AnnotationResultWithAnaysisExplanation(AnnotationResult):
+    """
+    Extends AnnotationResult with detailed analysis explanation.
+    """
+
     analysis_explanation: Optional[AnalysisExplanation]

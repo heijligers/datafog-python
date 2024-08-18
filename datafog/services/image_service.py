@@ -1,3 +1,11 @@
+"""
+Image processing service for OCR and other operations.
+
+This module provides classes for downloading images and performing OCR using
+either Tesseract or Donut models. It supports processing both local images
+and images from URLs.
+"""
+
 import asyncio
 import io
 import logging
@@ -16,6 +24,8 @@ from datafog.processing.image_processing.pytesseract_processor import (
 
 
 class ImageDownloader:
+    """Asynchronous image downloader with SSL support."""
+
     async def download_image(self, url: str) -> Image.Image:
         ssl_context = ssl.create_default_context(cafile=certifi.where())
         async with aiohttp.ClientSession(
@@ -32,6 +42,13 @@ class ImageDownloader:
 
 
 class ImageService:
+    """
+    Service for image processing and OCR.
+
+    Supports Tesseract and Donut OCR models, image downloading,
+    and various image processing operations.
+    """
+
     def __init__(self, use_donut: bool = False, use_tesseract: bool = True):
         self.downloader = ImageDownloader()
 

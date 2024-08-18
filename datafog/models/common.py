@@ -1,4 +1,9 @@
-# models/common.py
+"""
+Common models for DataFog PII detection and annotation.
+
+Defines entity types, patterns, and metadata structures used across the library.
+"""
+
 from enum import Enum
 from typing import List, Optional
 
@@ -6,7 +11,8 @@ from pydantic import BaseModel
 
 
 class EntityTypes(str, Enum):
-    # Define your entity types here
+    """PII entity types recognized by DataFog."""
+
     PERSON = "Names similar to John Doe, Joe Biden, Donald Trump, Kamala Harris"
     LOCATION = "Full or partial name of a location"
     ORGANIZATION = "Full or partial name of an organization"
@@ -21,12 +27,16 @@ class EntityTypes(str, Enum):
 
 
 class Pattern(BaseModel):
+    """Regex pattern for entity recognition."""
+
     name: str
     regex: str
     score: float
 
 
 class PatternRecognizer(BaseModel):
+    """Configuration for a pattern-based entity recognizer."""
+
     name: str
     supported_language: str
     patterns: List[Pattern]
@@ -36,4 +46,6 @@ class PatternRecognizer(BaseModel):
 
 
 class AnnotatorMetadata(BaseModel):
+    """Metadata for annotation results."""
+
     recognizer_name: str

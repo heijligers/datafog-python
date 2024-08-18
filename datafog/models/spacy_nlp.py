@@ -1,3 +1,10 @@
+"""
+Provides spaCy-based NLP functionality for entity recognition and annotation.
+
+This module implements a SpacyAnnotator class that uses spaCy models for
+text annotation, entity recognition, and related NLP tasks.
+"""
+
 from typing import List, Optional
 from uuid import uuid4
 
@@ -8,6 +15,13 @@ from .annotator import AnnotationResult, AnnotatorRequest
 
 
 class SpacyAnnotator:
+    """
+    Handles text annotation using spaCy NLP models.
+
+    Provides methods for loading models, annotating text, and managing spaCy resources.
+    Supports various NLP tasks including entity recognition and model management.
+    """
+
     def __init__(self, model_name: str = "en_core_web_lg"):
         self.model_name = model_name
         self.nlp = None
