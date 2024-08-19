@@ -39,7 +39,7 @@ class AnnotationResult(BaseModel):
 
     start: int
     end: int
-    score: float
+    score: Optional[float]
     entity_type: str
     recognition_metadata: Optional[AnnotatorMetadata]
 

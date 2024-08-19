@@ -40,26 +40,32 @@ class DataFog:
 
     def __init__(
         self,
-        image_service=ImageService(),
-        text_service=TextService(),
+        image_service=None,
+        text_service=None,
         spark_service=None,
         operations: List[OperationType] = [OperationType.SCAN],
+        hash_type: HashType = HashType.SHA256,
+        anonymizer_type: AnonymizerType = AnonymizerType.REPLACE,
     ):
-        self.image_service = image_service
-        self.text_service = text_service
+        self.image_service = image_service or ImageService()
+        self.text_service = text_service or TextService()
         self.spark_service: SparkService = spark_service
         self.operations: List[OperationType] = operations
-        self.anonymizer = Anonymizer()
+        self.anonymizer = Anonymizer(
+            hash_type=hash_type, anonymizer_type=anonymizer_type
+        )
         self.logger = logging.getLogger(__name__)
         self.logger.info(
             "Initializing DataFog class with the following services and operations:"
         )
-        self.logger.info(f"Image Service: {type(image_service)}")
-        self.logger.info(f"Text Service: {type(text_service)}")
+        self.logger.info(f"Image Service: {type(self.image_service)}")
+        self.logger.info(f"Text Service: {type(self.text_service)}")
         self.logger.info(
-            f"Spark Service: {type(spark_service) if spark_service else 'None'}"
+            f"Spark Service: {type(self.spark_service) if self.spark_service else 'None'}"
         )
         self.logger.info(f"Operations: {operations}")
+        self.logger.info(f"Hash Type: {hash_type}")
+        self.logger.info(f"Anonymizer Type: {anonymizer_type}")
 
     async def run_ocr_pipeline(self, image_urls: List[str]):
         """
@@ -151,19 +157,15 @@ class DataFog:
         )
         return text_list
 
-    def run_text_pipeline_sync(self, str_list: List[str]):
+    def run_text_pipeline_sync(self, str_list: List[str]) -> List[str]:
         """
         Run the text pipeline synchronously on a list of input text.
-
-        This method processes a list of text strings in a synchronous manner, potentially
-        annotating them for personally identifiable information (PII) and applying
-        anonymization if enabled.
 
         Args:
             str_list (List[str]): A list of text strings to be processed.
 
         Returns:
-            List: Processed text results based on the enabled operations.
+            List[str]: Processed text results based on the enabled operations.
 
         Raises:
             Exception: Any error encountered during the text processing.
@@ -176,29 +178,16 @@ class DataFog:
                     f"Text annotation completed with {len(annotated_text)} annotations."
                 )
 
-                if OperationType.REDACT in self.operations:
-                    return [
-                        self.anonymizer.anonymize(
-                            text, annotations, AnonymizerType.REDACT
-                        ).anonymized_text
-                        for text, annotations in zip(
-                            str_list, annotated_text, strict=True
-                        )
+                if any(
+                    op in self.operations
+                    for op in [
+                        OperationType.REDACT,
+                        OperationType.REPLACE,
+                        OperationType.HASH,
                     ]
-                elif OperationType.REPLACE in self.operations:
+                ):
                     return [
-                        self.anonymizer.anonymize(
-                            text, annotations, AnonymizerType.REPLACE
-                        ).anonymized_text
-                        for text, annotations in zip(
-                            str_list, annotated_text, strict=True
-                        )
-                    ]
-                elif OperationType.HASH in self.operations:
-                    return [
-                        self.anonymizer.anonymize(
-                            text, annotations, AnonymizerType.HASH
-                        ).anonymized_text
+                        self.anonymizer.anonymize(text, annotations).anonymized_text
                         for text, annotations in zip(
                             str_list, annotated_text, strict=True
                         )

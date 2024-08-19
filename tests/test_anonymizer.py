@@ -85,13 +85,12 @@ def test_anonymizer_hash(sample_text, sample_annotations, hash_type):
     for replacement in result.replaced_entities:
         assert replacement["original"] in sample_text
         assert replacement["replacement"] not in sample_text
-        assert len(replacement["replacement"]) == len(replacement["original"])
-
+        # assert len(replacement["replacement"]) == len(replacement["original"])
         # Check hash type-specific properties
         if hash_type == HashType.MD5:
-            assert len(replacement["replacement"]) <= 32
+            assert len(replacement["replacement"]) == 32
         elif hash_type in [HashType.SHA256, HashType.SHA3_256]:
-            assert len(replacement["replacement"]) <= 64
+            assert len(replacement["replacement"]) == 64
 
 
 def test_anonymizer_with_specific_entities(sample_text, sample_annotations):

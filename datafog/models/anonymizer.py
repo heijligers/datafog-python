@@ -64,36 +64,21 @@ class Anonymizer(BaseModel):
     ) -> AnonymizationResult:
         """Replace PII in text with anonymized values."""
         replacements = []
-        print(f"Entities to anonymize: {self.entities}")
         for annotation in sorted(annotations, key=lambda x: x.start, reverse=True):
-            print(f"Processing annotation: {annotation}")
             if not self.entities or annotation.entity_type in self.entities:
-                print(f"Matched entity type: {annotation.entity_type}")
-                if self.anonymizer_type == AnonymizerType.REPLACE:
-                    replacement = f"[{annotation.entity_type}_{len(replacements)}]"
-                    replacements.append(
-                        {
-                            "original": text[annotation.start : annotation.end],
-                            "replacement": replacement,
-                            "entity_type": annotation.entity_type,
-                        }
-                    )
-                    print(f"Added replacement: {replacements[-1]}")
+                replacement = self._generate_replacement(
+                    text[annotation.start : annotation.end], annotation.entity_type
+                )
+                replacements.append(
+                    {
+                        "original": text[annotation.start : annotation.end],
+                        "replacement": replacement,
+                        "entity_type": annotation.entity_type,
+                    }
+                )
+                text = text[: annotation.start] + replacement + text[annotation.end :]
 
-        print(f"Final replacements: {replacements}")
-        anonymized_text = text
-        for replacement in reversed(replacements):
-            start = text.index(replacement["original"])
-            end = start + len(replacement["original"])
-            anonymized_text = (
-                anonymized_text[:start]
-                + replacement["replacement"]
-                + anonymized_text[end:]
-            )
-
-        return AnonymizationResult(
-            anonymized_text=anonymized_text, replaced_entities=replacements
-        )
+        return AnonymizationResult(anonymized_text=text, replaced_entities=replacements)
 
     def _generate_replacement(self, original: str, entity_type: EntityTypes) -> str:
         """Generate a replacement for the given entity."""
@@ -119,7 +104,7 @@ class Anonymizer(BaseModel):
 
             start, end = annotation.start, annotation.end
             original = text[start:end]
-            replacement = self._hash_text(original)[: len(original)]
+            replacement = self._hash_text(original)
 
             text = text[:start] + replacement + text[end:]
             replacements.append(
@@ -145,7 +130,6 @@ class Anonymizer(BaseModel):
     def redact_pii(
         self, text: str, annotations: List[AnnotationResult]
     ) -> AnonymizationResult:
-        """Redact PII in text."""
         replacements = []
         for annotation in sorted(annotations, key=lambda x: x.start, reverse=True):
             if self.entities and annotation.entity_type not in self.entities:
