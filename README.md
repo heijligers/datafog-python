@@ -25,15 +25,7 @@ DataFog can be installed via pip:
 pip install datafog
 ```
 
-For v4 we're introducing a CLI! see more details below.
-
-# DataFog CLI Usage
-
-> **🚀 Beta Release: v4.0.0-beta**
->
-> This is a beta release of DataFog v4. Please report any issues or feedback to our [GitHub repository](https://github.com/datafog/datafog-python).
-
----
+# CLI
 
 ## 📚 Quick Reference
 
@@ -41,6 +33,9 @@ For v4 we're introducing a CLI! see more details below.
 | ------------------- | ------------------------------------ |
 | `scan-text`         | Analyze text for PII                 |
 | `scan-image`        | Extract and analyze text from images |
+| `redact-text`       | Redact PII in text                   |
+| `replace-text`      | Replace PII with anonymized values   |
+| `hash-text`         | Hash PII in text                     |
 | `health`            | Check service status                 |
 | `show-config`       | Display current settings             |
 | `download-model`    | Get a specific spaCy model           |
@@ -83,6 +78,50 @@ To extract text and annotate PII:
 
 ```bash
 datafog scan-image "nokia-statement.png" --operations scan
+```
+
+### Redacting Text
+
+To redact PII in text:
+
+```bash
+datafog redact-text "Tim Cook is the CEO of Apple and is based out of Cupertino, California"
+```
+
+which should output:
+
+```bash
+[REDACTED] is the CEO of [REDACTED] and is based out of [REDACTED], [REDACTED]
+```
+
+### Replacing Text
+
+To replace detected PII:
+
+```bash
+datafog replace-text "Tim Cook is the CEO of Apple and is based out of Cupertino, California"
+```
+
+which should return something like:
+
+```bash
+[PERSON_B86CACE6] is the CEO of [UNKNOWN_445944D7] and is based out of [UNKNOWN_32BA5DCA], [UNKNOWN_B7DF4969]
+```
+
+Note: a unique randomly generated identifier is created for each detected entity
+
+### Hashing Text
+
+You can select from SHA256, SHA3-256, and MD5 hashing algorithms to hash detected PII. Currently the hashed output does not match the length of the original entity, for privacy-preserving purposes. The default is SHA256.
+
+```bash
+datafog hash-text "Tim Cook is the CEO of Apple and is based out of Cupertino, California"
+```
+
+generating an output which looks like this:
+
+```bash
+5738a37f0af81594b8a8fd677e31b5e2cabd6d7791c89b9f0a1c233bb563ae39 is the CEO of f223faa96f22916294922b171a2696d868fd1f9129302eb41a45b2a2ea2ebbfd and is based out of ab5f41f04096cf7cd314357c4be26993eeebc0c094ca668506020017c35b7a9c, cad0535decc38b248b40e7aef9a1cfd91ce386fa5c46f05ea622649e7faf18fb
 ```
 
 ### Utility Commands
@@ -135,7 +174,7 @@ datafog list-entities
 
 💡 **Tip:** For more detailed information on each command, use the `--help` option, e.g., `datafog scan-text --help`.
 
-# TODO: Reorganize below
+# Python SDK
 
 ## Getting Started
 
@@ -151,7 +190,7 @@ client = DataFog(operations="scan")
 ocr_client = DataFog(operations="extract")
 ```
 
-### Text PII Annotation
+## Text PII Annotation
 
 Here's an example of how to annotate PII in a text document:
 
@@ -168,7 +207,7 @@ annotations = client.run_text_pipeline_sync(str_list=text_lines)
 print(annotations)
 ```
 
-### OCR PII Annotation
+## OCR PII Annotation
 
 For OCR capabilities, you can use the following:
 
@@ -190,6 +229,76 @@ loop.run_until_complete(run_ocr_pipeline_demo())
 ```
 
 Note: The DataFog library uses asynchronous programming for OCR, so make sure to use the `async`/`await` syntax when calling the appropriate methods.
+
+## Text Anonymization
+
+DataFog provides various anonymization techniques to protect sensitive information. Here are examples of how to use them:
+
+### Redacting Text
+
+To redact PII in text:
+
+```python
+from datafog import DataFog
+from datafog.config import OperationType
+
+client = DataFog(operations=[OperationType.SCAN, OperationType.REDACT])
+
+text = "Tim Cook is the CEO of Apple and is based out of Cupertino, California"
+redacted_text = client.run_text_pipeline_sync([text])[0]
+print(redacted_text)
+```
+
+Output:
+
+```
+[REDACTED] is the CEO of [REDACTED] and is based out of [REDACTED], [REDACTED]
+```
+
+### Replacing Text
+
+To replace detected PII with unique identifiers:
+
+```python
+from datafog import DataFog
+from datafog.config import OperationType
+
+client = DataFog(operations=[OperationType.SCAN, OperationType.REPLACE])
+
+text = "Tim Cook is the CEO of Apple and is based out of Cupertino, California"
+replaced_text = client.run_text_pipeline_sync([text])[0]
+print(replaced_text)
+```
+
+Output:
+
+```
+[PERSON_B86CACE6] is the CEO of [UNKNOWN_445944D7] and is based out of [UNKNOWN_32BA5DCA], [UNKNOWN_B7DF4969]
+```
+
+### Hashing Text
+
+To hash detected PII:
+
+```python
+from datafog import DataFog
+from datafog.config import OperationType
+from datafog.models.anonymizer import HashType
+
+client = DataFog(operations=[OperationType.SCAN, OperationType.HASH], hash_type=HashType.SHA256)
+
+text = "Tim Cook is the CEO of Apple and is based out of Cupertino, California"
+hashed_text = client.run_text_pipeline_sync([text])[0]
+print(hashed_text)
+```
+
+Output:
+
+```
+5738a37f0af81594b8a8fd677e31b5e2cabd6d7791c89b9f0a1c233bb563ae39 is the CEO of f223faa96f22916294922b171a2696d868fd1f9129302eb41a45b2a2ea2ebbfd and is based out of ab5f41f04096cf7cd314357c4be26993eeebc0c094ca668506020017c35b7a9c, cad0535decc38b248b40e7aef9a1cfd91ce386fa5c46f05ea622649e7faf18fb
+```
+
+You can choose from SHA256 (default), SHA3-256, and MD5 hashing algorithms by specifying the `hash_type` parameter
 
 ## Examples
 
