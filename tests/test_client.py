@@ -4,6 +4,14 @@ import pytest
 from typer.testing import CliRunner
 
 from datafog.client import app
+from datafog.models.annotator import AnnotationResult, AnnotatorMetadata
+from datafog.models.anonymizer import (
+    AnonymizationResult,
+    Anonymizer,
+    AnonymizerType,
+    HashType,
+)
+from datafog.models.common import EntityTypes
 
 runner = CliRunner()
 
@@ -12,6 +20,38 @@ runner = CliRunner()
 def mock_datafog():
     with patch("datafog.client.DataFog") as mock:
         yield mock
+
+
+@pytest.fixture
+def sample_text():
+    return "Jeff Smith works at DigiCorp Incorporated in Paris."
+
+
+@pytest.fixture
+def sample_annotations():
+    return [
+        AnnotationResult(
+            start=0,
+            end=9,
+            score=1.0,
+            entity_type=EntityTypes.PERSON,
+            recognition_metadata=AnnotatorMetadata(),
+        ),
+        AnnotationResult(
+            start=20,
+            end=42,
+            score=1.0,
+            entity_type=EntityTypes.ORGANIZATION,
+            recognition_metadata=AnnotatorMetadata(),
+        ),
+        AnnotationResult(
+            start=46,
+            end=51,
+            score=1.0,
+            entity_type=EntityTypes.LOCATION,
+            recognition_metadata=AnnotatorMetadata(),
+        ),
+    ]
 
 
 def test_scan_image_no_urls():
@@ -101,3 +141,140 @@ def test_list_entities(mock_spacy_annotator):
     result = runner.invoke(app, ["list-entities"])
     assert result.exit_code == 0
     assert "['PERSON', 'ORG']" in result.stdout
+
+
+@patch("datafog.client.SpacyAnnotator")
+@patch("datafog.client.Anonymizer")
+def test_redact_text(mock_anonymizer, mock_spacy_annotator, sample_annotations):
+    mock_annotator = mock_spacy_annotator.return_value
+    mock_anonymizer_instance = mock_anonymizer.return_value
+
+    sample_text = "John Doe works at Acme Corp"
+    sample_annotations = [
+        AnnotationResult(
+            start=0,
+            end=8,
+            score=1.0,
+            entity_type=EntityTypes.PERSON,
+            recognition_metadata=AnnotatorMetadata(),
+        ),
+        AnnotationResult(
+            start=18,
+            end=27,
+            score=1.0,
+            entity_type=EntityTypes.ORGANIZATION,
+            recognition_metadata=AnnotatorMetadata(),
+        ),
+    ]
+    mock_annotator.annotate_text.return_value = sample_annotations
+
+    mock_anonymizer_instance.anonymize.return_value = AnonymizationResult(
+        anonymized_text="[REDACTED] works at [REDACTED]", anonymized_entities=[]
+    )
+
+    result = runner.invoke(app, ["redact-text", sample_text])
+
+    assert result.exit_code == 0
+    assert "[REDACTED] works at [REDACTED]" in result.stdout
+    mock_spacy_annotator.assert_called_once()
+    mock_anonymizer.assert_called_once_with(anonymizer_type=AnonymizerType.REDACT)
+    mock_annotator.annotate_text.assert_called_once_with(sample_text)
+    mock_anonymizer_instance.anonymize.assert_called_once_with(
+        sample_text, sample_annotations
+    )
+
+
+@patch("datafog.client.SpacyAnnotator")
+@patch("datafog.client.Anonymizer")
+def test_replace_text(mock_anonymizer, mock_spacy_annotator):
+    mock_annotator = mock_spacy_annotator.return_value
+    mock_anonymizer_instance = mock_anonymizer.return_value
+
+    sample_text = "John Doe works at Acme Corp"
+    sample_annotations = [
+        AnnotationResult(
+            start=0,
+            end=8,
+            score=1.0,
+            entity_type=EntityTypes.PERSON,
+            recognition_metadata=AnnotatorMetadata(),
+        ),
+        AnnotationResult(
+            start=18,
+            end=27,
+            score=1.0,
+            entity_type=EntityTypes.ORGANIZATION,
+            recognition_metadata=AnnotatorMetadata(),
+        ),
+    ]
+    mock_annotator.annotate_text.return_value = sample_annotations
+
+    mock_anonymizer_instance.anonymize.return_value = AnonymizationResult(
+        anonymized_text="Jane Smith works at TechCo Inc", anonymized_entities=[]
+    )
+
+    result = runner.invoke(app, ["replace-text", sample_text])
+
+    assert result.exit_code == 0
+    assert "Jane Smith works at TechCo Inc" in result.stdout
+    mock_spacy_annotator.assert_called_once()
+    mock_anonymizer.assert_called_once_with(anonymizer_type=AnonymizerType.REPLACE)
+    mock_annotator.annotate_text.assert_called_once_with(sample_text)
+    mock_anonymizer_instance.anonymize.assert_called_once_with(
+        sample_text, sample_annotations
+    )
+
+
+@patch("datafog.client.SpacyAnnotator")
+@patch("datafog.client.Anonymizer")
+def test_hash_text(mock_anonymizer, mock_spacy_annotator):
+    mock_annotator = mock_spacy_annotator.return_value
+    mock_anonymizer_instance = mock_anonymizer.return_value
+
+    sample_text = "John Doe works at Acme Corp"
+    sample_annotations = [
+        AnnotationResult(
+            start=0,
+            end=8,
+            score=1.0,
+            entity_type=EntityTypes.PERSON,
+            recognition_metadata=AnnotatorMetadata(),
+        ),
+        AnnotationResult(
+            start=18,
+            end=27,
+            score=1.0,
+            entity_type=EntityTypes.ORGANIZATION,
+            recognition_metadata=AnnotatorMetadata(),
+        ),
+    ]
+    mock_annotator.annotate_text.return_value = sample_annotations
+
+    mock_anonymizer_instance.anonymize.return_value = AnonymizationResult(
+        anonymized_text="5ab5c95f works at 7b23f032", anonymized_entities=[]
+    )
+
+    result = runner.invoke(app, ["hash-text", sample_text])
+
+    assert result.exit_code == 0
+    assert "5ab5c95f works at 7b23f032" in result.stdout
+    mock_spacy_annotator.assert_called_once()
+    mock_anonymizer.assert_called_once_with(
+        anonymizer_type=AnonymizerType.HASH, hash_type=HashType.SHA256
+    )
+    mock_annotator.annotate_text.assert_called_once_with(sample_text)
+    mock_anonymizer_instance.anonymize.assert_called_once_with(
+        sample_text, sample_annotations
+    )
+
+    # Test with custom hash type
+    result = runner.invoke(app, ["hash-text", sample_text, "--hash-type", "md5"])
+
+    print(f"Exit code: {result.exit_code}")
+    print(f"Output: {result.stdout}")
+    print(f"Exception: {result.exception}")
+
+    assert result.exit_code == 0
+    mock_anonymizer.assert_called_with(
+        anonymizer_type=AnonymizerType.HASH, hash_type=HashType.MD5
+    )

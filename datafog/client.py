@@ -17,6 +17,7 @@ from rich.progress import track
 
 from .config import get_config
 from .main import DataFog
+from .models.anonymizer import Anonymizer, AnonymizerType, HashType
 from .models.spacy_nlp import SpacyAnnotator
 
 app = typer.Typer()
@@ -159,6 +160,61 @@ def list_entities():
     """
     annotator = SpacyAnnotator()
     typer.echo(annotator.list_entities())
+
+
+@app.command()
+def redact_text(text: str = typer.Argument(..., help="Text to redact")):
+    """
+    Redact PII in text.
+
+    Args:
+        text: Text to redact.
+
+    Prints the redacted text.
+    """
+    annotator = SpacyAnnotator()
+    anonymizer = Anonymizer(anonymizer_type=AnonymizerType.REDACT)
+    annotations = annotator.annotate_text(text)
+    result = anonymizer.anonymize(text, annotations)
+    typer.echo(result.anonymized_text)
+
+
+@app.command()
+def replace_text(text: str = typer.Argument(..., help="Text to replace PII")):
+    """
+    Replace PII in text with anonymized values.
+
+    Args:
+        text: Text to replace PII.
+
+    Prints the text with PII replaced.
+    """
+    annotator = SpacyAnnotator()
+    anonymizer = Anonymizer(anonymizer_type=AnonymizerType.REPLACE)
+    annotations = annotator.annotate_text(text)
+    result = anonymizer.anonymize(text, annotations)
+    typer.echo(result.anonymized_text)
+
+
+@app.command()
+def hash_text(
+    text: str = typer.Argument(..., help="Text to hash PII"),
+    hash_type: HashType = typer.Option(HashType.SHA256, help="Hash algorithm to use"),
+):
+    """
+    Choose from SHA256, MD5, or SHA3-256 algorithms to hash detected PII in text.
+
+    Args:
+        text: Text to hash PII.
+        hash_type: Hash algorithm to use.
+
+    Prints the text with PII hashed.
+    """
+    annotator = SpacyAnnotator()
+    anonymizer = Anonymizer(anonymizer_type=AnonymizerType.HASH, hash_type=hash_type)
+    annotations = annotator.annotate_text(text)
+    result = anonymizer.anonymize(text, annotations)
+    typer.echo(result.anonymized_text)
 
 
 if __name__ == "__main__":
