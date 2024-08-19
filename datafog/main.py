@@ -6,7 +6,7 @@ This module contains the core classes for DataFog:
 - TextPIIAnnotator: Class for annotating PII in text.
 
 These classes provide high-level interfaces for image and text processing,
-including OCR, PII detection, and annotation.
+including OCR, PII detection, annotation, and anonymization.
 """
 
 import json
@@ -14,6 +14,7 @@ import logging
 from typing import List
 
 from .config import OperationType
+from .models.anonymizer import Anonymizer, AnonymizerType, HashType
 from .processing.text_processing.spacy_pii_annotator import SpacyPIIAnnotator
 from .services.image_service import ImageService
 from .services.spark_service import SparkService
@@ -27,13 +28,14 @@ class DataFog:
     """
     Main class for running OCR and text processing pipelines.
 
-    Handles image and text processing operations, including OCR and PII detection.
+    Handles image and text processing operations, including OCR, PII detection, and anonymization.
 
     Attributes:
         image_service: Service for image processing and OCR.
         text_service: Service for text processing and annotation.
         spark_service: Optional Spark service for distributed processing.
         operations: List of operations to perform.
+        anonymizer: Anonymizer for PII redaction, replacement, or hashing.
     """
 
     def __init__(
@@ -41,12 +43,13 @@ class DataFog:
         image_service=ImageService(),
         text_service=TextService(),
         spark_service=None,
-        operations: List[OperationType] = [OperationType.ANNOTATE_PII],
+        operations: List[OperationType] = [OperationType.SCAN],
     ):
         self.image_service = image_service
         self.text_service = text_service
         self.spark_service: SparkService = spark_service
         self.operations: List[OperationType] = operations
+        self.anonymizer = Anonymizer()
         self.logger = logging.getLogger(__name__)
         self.logger.info(
             "Initializing DataFog class with the following services and operations:"
@@ -64,38 +67,22 @@ class DataFog:
 
         This method performs optical character recognition (OCR) on the images specified by the URLs.
         If PII annotation is enabled, it also annotates the extracted text for personally identifiable information.
+        If redaction, replacement, or hashing is enabled, it applies the corresponding anonymization.
 
         Args:
             image_urls (List[str]): A list of URLs pointing to the images to be processed.
 
         Returns:
-            List: If PII annotation is enabled, returns a list of annotated text results.
-                  Otherwise, returns a list of extracted text from the images.
+            List: Processed text results based on the enabled operations.
 
         Raises:
-            Exception: Any error encountered during the OCR or annotation process.
-
-        Note:
-            The method logs various stages of the process, including completion of OCR extraction
-            and text annotation, as well as any errors encountered.
+            Exception: Any error encountered during the OCR or text processing.
         """
         try:
             extracted_text = await self.image_service.ocr_extract(image_urls)
             self.logger.info(f"OCR extraction completed for {len(image_urls)} images.")
-            self.logger.debug(
-                f"Total length of extracted text: {sum(len(text) for text in extracted_text)}"
-            )
 
-            if OperationType.ANNOTATE_PII in self.operations:
-                annotated_text = await self.text_service.batch_annotate_text_async(
-                    extracted_text
-                )
-                self.logger.info(
-                    f"Text annotation completed with {len(annotated_text)} annotations."
-                )
-                return annotated_text
-            else:
-                return extracted_text
+            return await self._process_text(extracted_text)
         except Exception as e:
             logging.error(f"Error in run_ocr_pipeline: {str(e)}")
             return [f"Error: {str(e)}"]
@@ -105,75 +92,126 @@ class DataFog:
         Run the text pipeline asynchronously on a list of input text.
 
         This method processes a list of text strings, potentially annotating them for personally
-        identifiable information (PII) if the ANNOTATE_PII operation is enabled.
+        identifiable information (PII) and applying anonymization if enabled.
 
         Args:
             str_list (List[str]): A list of text strings to be processed.
 
         Returns:
-            List: If PII annotation is enabled, returns a list of annotated text results.
-                  Otherwise, returns the original list of text strings.
+            List: Processed text results based on the enabled operations.
 
         Raises:
-            Exception: Any error encountered during the text processing or annotation.
-
-        Note:
-            The method logs the start of the pipeline, the completion of text annotation if applicable,
-            and any errors encountered during processing.
+            Exception: Any error encountered during the text processing.
         """
         try:
             self.logger.info(f"Starting text pipeline with {len(str_list)} texts.")
-            if OperationType.ANNOTATE_PII in self.operations:
-                annotated_text = await self.text_service.batch_annotate_text_async(
-                    str_list
-                )
-                self.logger.info(
-                    f"Text annotation completed with {len(annotated_text)} annotations."
-                )
-                return annotated_text
-
-            self.logger.info("No annotation operation found; returning original texts.")
-            return str_list
+            return await self._process_text(str_list)
         except Exception as e:
             self.logger.error(f"Error in run_text_pipeline: {str(e)}")
             raise
+
+    async def _process_text(self, text_list: List[str]):
+        """
+        Internal method to process text based on enabled operations.
+        """
+        if OperationType.SCAN in self.operations:
+            annotated_text = await self.text_service.batch_annotate_text_async(
+                text_list
+            )
+            self.logger.info(
+                f"Text annotation completed with {len(annotated_text)} annotations."
+            )
+
+            if OperationType.REDACT in self.operations:
+                return [
+                    self.anonymizer.anonymize(
+                        text, annotations, AnonymizerType.REDACT
+                    ).anonymized_text
+                    for text, annotations in zip(text_list, annotated_text, strict=True)
+                ]
+            elif OperationType.REPLACE in self.operations:
+                return [
+                    self.anonymizer.anonymize(
+                        text, annotations, AnonymizerType.REPLACE
+                    ).anonymized_text
+                    for text, annotations in zip(text_list, annotated_text, strict=True)
+                ]
+            elif OperationType.HASH in self.operations:
+                return [
+                    self.anonymizer.anonymize(
+                        text, annotations, AnonymizerType.HASH
+                    ).anonymized_text
+                    for text, annotations in zip(text_list, annotated_text, strict=True)
+                ]
+            else:
+                return annotated_text
+
+        self.logger.info(
+            "No annotation or anonymization operation found; returning original texts."
+        )
+        return text_list
 
     def run_text_pipeline_sync(self, str_list: List[str]):
         """
         Run the text pipeline synchronously on a list of input text.
 
         This method processes a list of text strings in a synchronous manner, potentially
-        annotating them for personally identifiable information (PII) if the ANNOTATE_PII
-        operation is enabled.
+        annotating them for personally identifiable information (PII) and applying
+        anonymization if enabled.
 
         Args:
             str_list (List[str]): A list of text strings to be processed.
 
         Returns:
-            List: If PII annotation is enabled, returns a list of annotated text results.
-                  Otherwise, returns the original list of text strings.
+            List: Processed text results based on the enabled operations.
 
         Raises:
-            Exception: Any error encountered during the text processing or annotation.
-
-        Note:
-            The method logs the start of the pipeline, the completion of text annotation if applicable,
-            and any errors encountered during processing. This synchronous version may be preferred
-            for smaller datasets or when immediate results are required.
+            Exception: Any error encountered during the text processing.
         """
         try:
             self.logger.info(f"Starting text pipeline with {len(str_list)} texts.")
-            if OperationType.ANNOTATE_PII in self.operations:
+            if OperationType.SCAN in self.operations:
                 annotated_text = self.text_service.batch_annotate_text_sync(str_list)
                 self.logger.info(
                     f"Text annotation completed with {len(annotated_text)} annotations."
                 )
-                return annotated_text
 
-            self.logger.info("No annotation operation found; returning original texts.")
+                if OperationType.REDACT in self.operations:
+                    return [
+                        self.anonymizer.anonymize(
+                            text, annotations, AnonymizerType.REDACT
+                        ).anonymized_text
+                        for text, annotations in zip(
+                            str_list, annotated_text, strict=True
+                        )
+                    ]
+                elif OperationType.REPLACE in self.operations:
+                    return [
+                        self.anonymizer.anonymize(
+                            text, annotations, AnonymizerType.REPLACE
+                        ).anonymized_text
+                        for text, annotations in zip(
+                            str_list, annotated_text, strict=True
+                        )
+                    ]
+                elif OperationType.HASH in self.operations:
+                    return [
+                        self.anonymizer.anonymize(
+                            text, annotations, AnonymizerType.HASH
+                        ).anonymized_text
+                        for text, annotations in zip(
+                            str_list, annotated_text, strict=True
+                        )
+                    ]
+                else:
+                    return annotated_text
+
+            self.logger.info(
+                "No annotation or anonymization operation found; returning original texts."
+            )
             return str_list
         except Exception as e:
-            self.logger.error(f"Error in run_text_pipeline: {str(e)}")
+            self.logger.error(f"Error in run_text_pipeline_sync: {str(e)}")
             raise
 
     def _add_attributes(self, attributes: dict):
@@ -194,7 +232,7 @@ class DataFog:
             using this method to avoid overwriting existing attributes.
         """
         for key, value in attributes.items():
-            pass
+            setattr(self, key, value)
 
 
 class TextPIIAnnotator:
@@ -225,4 +263,5 @@ class TextPIIAnnotator:
 
         finally:
             # Ensure Spark resources are released
-            pass
+            if self.spark_processor:
+                self.spark_processor.stop()

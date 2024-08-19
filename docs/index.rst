@@ -47,13 +47,13 @@ Extract text from image:
 
 .. code-block:: bash
 
-    datafog scan-image "path/to/image.png" --operations extract_text
+    datafog scan-image "path/to/image.png" --operations extract
 
 Scan for PII in image:
 
 .. code-block:: bash
 
-    datafog scan-image "path/to/image.png" --operations annotate_pii
+    datafog scan-image "path/to/image.png" --operations scan
 
 For more information on the CLI, see :doc:`cli`.
 
@@ -70,7 +70,7 @@ Scan text for PII:
    from datafog import DataFog
 
    # For text annotation
-   client = DataFog(operations="annotate_pii")
+   client = DataFog(operations="scan")
 
    # Fetch sample medical record
    doc_url = "https://gist.githubusercontent.com/sidmohan0/b43b72693226422bac5f083c941ecfdb/raw/b819affb51796204d59987893f89dee18428ed5d/note1.txt"
@@ -90,7 +90,7 @@ Scan image for PII:
    from datafog import DataFog
 
    # For OCR and PII annotation
-   ocr_client = DataFog(operations="extract_text,annotate_pii")
+   ocr_client = DataFog(operations="extract,scan")
 
    async def run_ocr_pipeline_demo():
        image_url = "https://s3.amazonaws.com/thumbnails.venngage.com/template/dc377004-1c2d-49f2-8ddf-d63f11c8d9c2.png"

@@ -39,7 +39,7 @@ class AnonymizationResult(BaseModel):
 
 
 class Anonymizer(BaseModel):
-    anonymizer_type: AnonymizerType
+    anonymizer_type: AnonymizerType = AnonymizerType.REPLACE
     entities: Optional[List[EntityTypes]] = None
     hash_type: Optional[HashType] = HashType.SHA256
 

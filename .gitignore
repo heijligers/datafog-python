@@ -36,5 +36,4 @@ error_log.txt
 docs/*
 !docs/*.rst
 !docs/conf.py
-test_anonymizer.py
-test_anonymizer.pyc
+scratch.py

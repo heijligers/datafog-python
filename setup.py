@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
     long_description = f.read()
 
 # Use a single source of truth for the version
-__version__ = "v4.0.0-beta.1"
+__version__ = "v4.0.0"
 
 project_urls = {
     "Homepage": "https://datafog.ai",

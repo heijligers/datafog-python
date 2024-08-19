@@ -70,19 +70,19 @@ datafog scan-text "Tim Cook is the CEO of Apple and is based out of Cupertino, C
 To extract text from images and optionally perform PII annotation:
 
 ```bash
-datafog scan-image "path/to/image.png" --operations extract_text
+datafog scan-image "path/to/image.png" --operations extract
 ```
 
 **Example:**
 
 ```bash
-datafog scan-image "nokia-statement.png" --operations extract_text
+datafog scan-image "nokia-statement.png" --operations extract
 ```
 
 To extract text and annotate PII:
 
 ```bash
-datafog scan-image "nokia-statement.png" --operations annotate_pii
+datafog scan-image "nokia-statement.png" --operations scan
 ```
 
 ### Utility Commands
@@ -127,7 +127,7 @@ datafog list-entities
 
 ## ⚠️ Important Notes
 
-- For `scan-image` and `scan-text` commands, use `--operations` to specify different operations. Default is `annotate_pii`.
+- For `scan-image` and `scan-text` commands, use `--operations` to specify different operations. Default is `scan`.
 - Process multiple images or text strings in a single command by providing multiple arguments.
 - Ensure proper permissions and configuration of the DataFog service before running commands.
 
@@ -145,10 +145,10 @@ To use DataFog, you'll need to create a DataFog client with the desired operatio
 from datafog import DataFog
 
 # For text annotation
-client = DataFog(operations="annotate_pii")
+client = DataFog(operations="scan")
 
 # For OCR (Optical Character Recognition)
-ocr_client = DataFog(operations="extract_text")
+ocr_client = DataFog(operations="extract")
 ```
 
 ### Text PII Annotation

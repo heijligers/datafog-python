@@ -80,13 +80,15 @@ class OperationType(str, Enum):
     """
     Enum for supported DataFog operations.
 
-    ANNOTATE_PII: Detect and annotate PII in text
-    EXTRACT_TEXT: Extract text from images
-    REDACT_PII: Remove PII from text
-    ANONYMIZE_PII: Replace PII with fake data
+    SCAN: Detect and annotate PII in text
+    EXTRACT: Extract text from images
+    REDACT: Remove PII from text
+    REPLACE: Replace PII with fake data
+    HASH: Replace PII with a hash
     """
 
-    ANNOTATE_PII = "annotate_pii"
-    EXTRACT_TEXT = "extract_text"
-    REDACT_PII = "redact_pii"
-    ANONYMIZE_PII = "anonymize_pii"
+    SCAN = "scan"
+    EXTRACT = "extract"
+    REDACT = "redact"
+    REPLACE = "replace"
+    HASH = "hash"

@@ -27,7 +27,7 @@ def scan_image(
     image_urls: List[str] = typer.Argument(
         None, help="List of image URLs or file paths to extract text from"
     ),
-    operations: str = typer.Option("annotate_pii", help="Operation to perform"),
+    operations: str = typer.Option("scan", help="Operation to perform"),
 ):
     """
     Scan images for text and PII.
@@ -37,7 +37,7 @@ def scan_image(
 
     Args:
         image_urls: List of image URLs or file paths
-        operations: Pipeline operations to run (default: annotate_pii)
+        operations: Pipeline operations to run (default: scan)
 
     Prints results or exits with error on failure.
     """
@@ -61,7 +61,7 @@ def scan_text(
     str_list: List[str] = typer.Argument(
         None, help="List of texts to extract text from"
     ),
-    operations: str = typer.Option("annotate_pii", help="Operation to perform"),
+    operations: str = typer.Option("scan", help="Operation to perform"),
 ):
     """
     Scan texts for PII.
@@ -70,7 +70,7 @@ def scan_text(
 
     Args:
         str_list: List of texts to analyze
-        operations: Pipeline operations to run (default: annotate_pii)
+        operations: Pipeline operations to run (default: scan)
 
     Prints results or exits with error on failure.
     """

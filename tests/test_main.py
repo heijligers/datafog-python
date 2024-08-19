@@ -85,11 +85,11 @@ def test_datafog_init():
     assert isinstance(datafog.image_service, ImageService)
     assert isinstance(datafog.text_service, TextService)
     assert datafog.spark_service is None
-    assert datafog.operations == [OperationType.ANNOTATE_PII]
+    assert datafog.operations == [OperationType.SCAN]
 
     custom_image_service = ImageService()
     custom_text_service = TextService()
-    custom_operations = [OperationType.ANNOTATE_PII, OperationType.REDACT_PII]
+    custom_operations = [OperationType.SCAN, OperationType.REDACT]
 
     datafog_custom = DataFog(
         image_service=custom_image_service,
