@@ -42,6 +42,7 @@ setup(
         "pydantic-settings==2.3.4",
         "typer==0.12.3",
         "sphinx",
+        "cryptography",
     ],
     python_requires=">=3.10,<3.13",
     entry_points={

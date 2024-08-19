@@ -8,6 +8,12 @@ from .models.annotator import (
     AnnotationResultWithAnaysisExplanation,
     AnnotatorRequest,
 )
+from .models.anonymizer import (
+    AnonymizationResult,
+    Anonymizer,
+    AnonymizerRequest,
+    AnonymizerType,
+)
 from .models.common import AnnotatorMetadata, EntityTypes, Pattern, PatternRecognizer
 from .models.spacy_nlp import SpacyAnnotator
 from .processing.image_processing.donut_processor import DonutProcessor
@@ -41,4 +47,8 @@ __all__ = [
     "PatternRecognizer",
     "get_config",
     "SpacyAnnotator",
+    "AnonymizerType",
+    "AnonymizerRequest",
+    "AnonymizationResult",
+    "Anonymizer",
 ]

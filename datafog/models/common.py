@@ -13,9 +13,9 @@ from pydantic import BaseModel
 class EntityTypes(str, Enum):
     """PII entity types recognized by DataFog."""
 
-    PERSON = "Names similar to John Doe, Joe Biden, Donald Trump, Kamala Harris"
-    LOCATION = "Full or partial name of a location"
-    ORGANIZATION = "Full or partial name of an organization"
+    PERSON = "PERSON"
+    LOCATION = "LOCATION"
+    ORGANIZATION = "ORGANIZATION"
     EMAIL = "email address (containing @)"
     PHONE_NUMBER = (
         "phone number (containing numbers and possibly dashes or parentheses)"
@@ -23,7 +23,7 @@ class EntityTypes(str, Enum):
     DATE = "date (in any format)"
     NUMBER = "number (in any format)"
     CREDIT_CARD = "credit card number (in any format)"
-    UNKNOWN = "Unknown entity type"
+    UNKNOWN = "UNKNOWN"
 
 
 class Pattern(BaseModel):
@@ -48,4 +48,4 @@ class PatternRecognizer(BaseModel):
 class AnnotatorMetadata(BaseModel):
     """Metadata for annotation results."""
 
-    recognizer_name: str
+    recognizer_name: Optional[str] = None
