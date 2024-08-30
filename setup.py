@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
     long_description = f.read()
 
 # Use a single source of truth for the version
-__version__ = "3.4.0"
+__version__ = "4.0.0b0"
 
 project_urls = {
     "Homepage": "https://datafog.ai",
@@ -39,8 +39,17 @@ setup(
         "fastapi",
         "asyncio",
         "setuptools",
+        "pydantic-settings==2.3.4",
+        "typer==0.12.3",
+        "sphinx",
+        "cryptography",
     ],
     python_requires=">=3.10,<3.13",
+    entry_points={
+        "console_scripts": [
+            "datafog=datafog.client:app",
+        ],
+    },
     classifiers=[
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.11",

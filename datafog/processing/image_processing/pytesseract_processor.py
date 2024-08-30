@@ -1,12 +1,27 @@
+"""
+Provides OCR functionality using Pytesseract.
+
+This module contains a PytesseractProcessor class for extracting text from images
+using the Pytesseract OCR engine.
+"""
+
+import logging
+
 import pytesseract
 from PIL import Image
 
 
 class PytesseractProcessor:
-    def __init__(self):
-        pass
+    """
+    Processes images to extract text using Pytesseract OCR.
 
-    @staticmethod
-    async def extract_text_from_image(image: Image) -> str:
-        """Extract text from an image using pytesseract."""
-        return pytesseract.image_to_string(image)
+    Provides an asynchronous method to convert image content to text.
+    Handles errors and logs issues during text extraction.
+    """
+
+    async def extract_text_from_image(self, image: Image.Image) -> str:
+        try:
+            return pytesseract.image_to_string(image)
+        except Exception as e:
+            logging.error(f"Pytesseract error: {str(e)}")
+            raise

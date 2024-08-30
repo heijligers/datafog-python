@@ -1,3 +1,11 @@
+"""
+Provides functionality for processing images using the Donut model.
+
+This module implements a DonutProcessor class that uses the Donut model
+for document understanding tasks, particularly OCR and information extraction
+from images of documents.
+"""
+
 import importlib
 import json
 import re
@@ -13,6 +21,14 @@ from .image_downloader import ImageDownloader
 
 
 class DonutProcessor:
+    """
+    Handles image processing using the Donut model.
+
+    Provides methods for loading models, preprocessing images, parsing images
+    for text extraction, and managing dependencies. Supports processing both
+    local images and images from URLs.
+    """
+
     def __init__(self, model_path="naver-clova-ix/donut-base-finetuned-cord-v2"):
         self.ensure_installed("torch")
         self.ensure_installed("transformers")

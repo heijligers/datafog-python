@@ -33,3 +33,7 @@ node_modules/
 .venv
 examples/venv/
 error_log.txt
+docs/*
+!docs/*.rst
+!docs/conf.py
+scratch.py

@@ -1,3 +1,12 @@
+"""
+PySpark UDFs for PII annotation and related utilities.
+
+This module provides functions for PII (Personally Identifiable Information) annotation
+using SpaCy models in a PySpark environment. It includes utilities for installing
+dependencies, creating and broadcasting PII annotator UDFs, and performing PII annotation
+on text data.
+"""
+
 import importlib
 import subprocess
 import sys

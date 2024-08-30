@@ -1,12 +1,12 @@
-name: feature-cicd-setup-and-test
+name: beta-cicd-setup-and-test
 
 on:
   push:
     branches:
-      - feature/*
+      - "v*.0.0-beta.*"
   pull_request:
     branches:
-      - feature/*
+      - "v*.0.0-beta.*"
 
 jobs:
   lint:

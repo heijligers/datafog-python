@@ -1,3 +1,10 @@
+"""
+Asynchronous image downloader for fetching images from URLs.
+
+This module provides functionality to download single or multiple images
+asynchronously from given URLs using aiohttp.
+"""
+
 import asyncio
 from io import BytesIO
 from typing import List
@@ -7,10 +14,18 @@ from PIL import Image
 
 
 class ImageDownloader:
+    """
+    Asynchronous image downloader.
+
+    Provides methods to download single or multiple images from URLs.
+    Uses aiohttp for efficient asynchronous network operations.
+    """
+
     def __init__(self):
         pass
 
     async def download_image(self, image_url: str) -> Image.Image:
+        """Download a single image from a URL."""
         async with aiohttp.ClientSession() as session:
             async with session.get(image_url) as response:
                 if response.status == 200:
@@ -20,4 +35,5 @@ class ImageDownloader:
                     raise Exception(f"Failed to download image from {image_url}")
 
     async def download_images(self, urls: List[str]) -> List[Image.Image]:
+        """Download multiple images from a list of URLs concurrently."""
         return await asyncio.gather(*[self.download_image(url) for url in urls])

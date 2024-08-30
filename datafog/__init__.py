@@ -1,6 +1,21 @@
 from .__about__ import __version__
-from .config import OperationType
+from .client import app
+from .config import OperationType, get_config
 from .main import DataFog, TextPIIAnnotator
+from .models.annotator import (
+    AnalysisExplanation,
+    AnnotationResult,
+    AnnotationResultWithAnaysisExplanation,
+    AnnotatorRequest,
+)
+from .models.anonymizer import (
+    AnonymizationResult,
+    Anonymizer,
+    AnonymizerRequest,
+    AnonymizerType,
+)
+from .models.common import AnnotatorMetadata, EntityTypes, Pattern, PatternRecognizer
+from .models.spacy_nlp import SpacyAnnotator
 from .processing.image_processing.donut_processor import DonutProcessor
 from .processing.image_processing.image_downloader import ImageDownloader
 from .processing.image_processing.pytesseract_processor import PytesseractProcessor
@@ -21,4 +36,19 @@ __all__ = [
     "ImageDownloader",
     "PytesseractProcessor",
     "__version__",
+    "app",
+    "AnalysisExplanation",
+    "AnnotationResult",
+    "AnnotationResultWithAnaysisExplanation",
+    "AnnotatorRequest",
+    "AnnotatorMetadata",
+    "EntityTypes",
+    "Pattern",
+    "PatternRecognizer",
+    "get_config",
+    "SpacyAnnotator",
+    "AnonymizerType",
+    "AnonymizerRequest",
+    "AnonymizationResult",
+    "Anonymizer",
 ]

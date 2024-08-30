@@ -1,11 +1,15 @@
 import asyncio
 import json
+import logging
+import re
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from datafog.config import OperationType
 from datafog.main import DataFog
+from datafog.models.annotator import AnnotationResult
+from datafog.models.anonymizer import AnonymizerType, HashType
 from datafog.processing.text_processing.spacy_pii_annotator import (
     SpacyPIIAnnotator as TextPIIAnnotator,
 )
@@ -85,11 +89,11 @@ def test_datafog_init():
     assert isinstance(datafog.image_service, ImageService)
     assert isinstance(datafog.text_service, TextService)
     assert datafog.spark_service is None
-    assert datafog.operations == [OperationType.ANNOTATE_PII]
+    assert datafog.operations == [OperationType.SCAN]
 
     custom_image_service = ImageService()
     custom_text_service = TextService()
-    custom_operations = [OperationType.ANNOTATE_PII, OperationType.REDACT_PII]
+    custom_operations = [OperationType.SCAN, OperationType.REDACT]
 
     datafog_custom = DataFog(
         image_service=custom_image_service,
@@ -164,3 +168,74 @@ def test_run_text_pipeline_sync_no_annotation():
     result = datafog.run_text_pipeline_sync(["Sample text"])
 
     assert result == ["Sample text"]
+
+
+@pytest.mark.parametrize(
+    "operation, hash_type, expected_pattern",
+    [
+        (
+            OperationType.REDACT,
+            None,
+            r"\[REDACTED\] tries one more time to save his \$56 billion pay package",
+        ),
+        (
+            OperationType.REPLACE,
+            None,
+            r"\[PERSON(_[A-F0-9]+)?\] tries one more time to save his \$56 billion pay package",
+        ),
+        (
+            OperationType.HASH,
+            HashType.MD5,
+            r"([a-f0-9]{32}) tries one more time to save his \$56 billion pay package",
+        ),
+        (
+            OperationType.HASH,
+            HashType.SHA256,
+            r"([a-f0-9]{64}) tries one more time to save his \$56 billion pay package",
+        ),
+        (
+            OperationType.HASH,
+            HashType.SHA3_256,
+            r"([a-f0-9]{64}) tries one more time to save his \$56 billion pay package",
+        ),
+    ],
+)
+def test_run_text_pipeline_anonymization(
+    mock_text_service, operation, hash_type, expected_pattern
+):
+    logging.basicConfig(level=logging.INFO)
+    datafog = DataFog(
+        text_service=mock_text_service,
+        operations=[OperationType.SCAN, operation],
+        hash_type=hash_type,
+        anonymizer_type=operation,
+    )
+    mock_text_service.batch_annotate_text_sync.return_value = [
+        [
+            AnnotationResult(
+                start=0,
+                end=9,
+                entity_type="PERSON",
+                text="Elon Musk",
+                score=0.9,
+                recognition_metadata={"confidence": "high"},
+            )
+        ]
+    ]
+
+    result = datafog.run_text_pipeline_sync(
+        ["Elon Musk tries one more time to save his $56 billion pay package"]
+    )
+
+    logging.info(f"Result: {result}")
+    assert len(result) == 1, "Expected a single result"
+    assert re.match(
+        expected_pattern, result[0]
+    ), f"Result {result[0]!r} does not match pattern {expected_pattern!r}"
+
+    if operation == AnonymizerType.HASH:
+        hashed_part = result[0].split()[0]
+        if hash_type == HashType.MD5:
+            assert len(hashed_part) == 32
+        elif hash_type in [HashType.SHA256, HashType.SHA3_256]:
+            assert len(hashed_part) == 64
