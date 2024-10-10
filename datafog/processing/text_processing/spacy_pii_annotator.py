@@ -75,28 +75,28 @@ class SpacyPIIAnnotator(BaseModel):
     #         }  # Return empty annotations in case of error
 
 
-def annotate(self, text: str) -> List[AnnotationResult]:
-    try:
-        if not text:
-            return []
-        if len(text) > MAXIMAL_STRING_SIZE:
-            text = text[:MAXIMAL_STRING_SIZE]
-        doc = self.nlp(text)
-        results = []
-        for ent in doc.ents:
-            result = AnnotationResult(
-                start=ent.start_char,
-                end=ent.end_char,
-                score=0.8,  # Adjust the score as needed
-                entity_type=ent.label_,
-                recognition_metadata=None,
-            )
-            results.append(result)
-        return results
-    except Exception as e:
-        logging.error(f"Error processing text for PII annotations: {str(e)}")
-        return []  # Return empty list in case of error
+    def annotate(self, text: str) -> List[AnnotationResult]:
+        try:
+            if not text:
+                return []
+            if len(text) > MAXIMAL_STRING_SIZE:
+                text = text[:MAXIMAL_STRING_SIZE]
+            doc = self.nlp(text)
+            results = []
+            for ent in doc.ents:
+                result = AnnotationResult(
+                    start=ent.start_char,
+                    end=ent.end_char,
+                    score=0.8,  # Adjust the score as needed
+                    entity_type=ent.label_,
+                    recognition_metadata=None,
+                )
+                results.append(result)
+            return results
+        except Exception as e:
+            logging.error(f"Error processing text for PII annotations: {str(e)}")
+            return []  # Return empty list in case of error
 
 
-    class Config:
-        arbitrary_types_allowed = True
+        class Config:
+            arbitrary_types_allowed = True

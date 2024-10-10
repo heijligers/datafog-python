@@ -8,7 +8,7 @@ import asyncio
 from typing import Dict, List
 
 from datafog.processing.text_processing.spacy_pii_annotator import SpacyPIIAnnotator
-
+from datafog.models.annotator import AnnotationResult
 
 class TextService:
     """
@@ -28,34 +28,31 @@ class TextService:
             for i in range(0, len(text), self.text_chunk_length)
         ]
 
-    def _combine_annotations(self, annotations: List[Dict]) -> Dict:
-        """Combine annotations from multiple chunks."""
-        combined = {}
-        for annotation in annotations:
-            for key, value in annotation.items():
-                if key not in combined:
-                    combined[key] = []
-                combined[key].extend(value)
-        return combined
+    def _combine_annotations(self, annotations_list: List[List[AnnotationResult]]) -> List[AnnotationResult]:
+        """Combine lists of AnnotationResult from multiple chunks."""
+        combined_annotations = []
+        for annotation in annotations_list:
+            combined_annotations.extend(annotation)
+        return combined_annotations
 
-    def annotate_text_sync(self, text: str) -> Dict:
+    def annotate_text_sync(self, text: str) -> List[AnnotationResult]:
         """Synchronously annotate a text string."""
         if not text:
-            return {}
-        print(f"Starting on {text.split()[0]}")
+            return []
+        #print(f"Starting on {text.split()[0]}")
         chunks = self._chunk_text(text)
-        annotations = []
+        annotations_list = []
         for chunk in chunks:
             res = self.annotator.annotate(chunk)
-            annotations.append(res)
-        combined = self._combine_annotations(annotations)
-        print(f"Done processing {text.split()[0]}")
-        return combined
+            annotations_list.append(res)
+        combined_annotations = self._combine_annotations(annotations_list)
+        #print(f"Done processing {text.split()[0]}")
+        return combined_annotations
 
-    def batch_annotate_text_sync(self, texts: List[str]) -> Dict[str, Dict]:
+    def batch_annotate_text_sync(self, texts: List[str]) -> List[List[AnnotationResult]]:
         """Synchronously annotate a list of text input."""
         results = [self.annotate_text_sync(text) for text in texts]
-        return dict(zip(texts, results, strict=True))
+        return results
 
     async def annotate_text_async(self, text: str) -> Dict:
         """Asynchronously annotate a text string."""
