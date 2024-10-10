@@ -3,6 +3,7 @@ from typing import Any, Dict, List
 
 from pydantic import BaseModel
 from datafog.models.annotator import AnnotationResult
+
 PII_ANNOTATION_LABELS = [
     "CARDINAL",
     "DATE",
@@ -53,7 +54,17 @@ class SpacyPIIAnnotator(BaseModel):
                 check=True,
             )
             nlp = spacy.load("en_core_web_lg")
-
+        # Add custom patterns
+        ruler = nlp.add_pipe("entity_ruler", after="ner")
+        ruler.matcher.validate = True  # Enable validation
+        patterns = [
+            {"label": "EMAIL", "pattern": [{"LIKE_EMAIL": True}]},
+            {"label": "PHONE_NUMBER",
+             "pattern": [{"ORTH": "+", "OP": "?"}, {"SHAPE": "ddd"}, {"ORTH": "-", "OP": "?"}, {"SHAPE": "ddd"},
+                         {"ORTH": "-", "OP": "?"}, {"SHAPE"
+                                                    "dddd"}]},
+        ]
+        ruler.add_patterns(patterns)
         return cls(nlp=nlp)
 
     # def annotate(self, text: str) -> Dict[str, List[str]]:
@@ -73,7 +84,6 @@ class SpacyPIIAnnotator(BaseModel):
     #         return {
     #             label: [] for label in PII_ANNOTATION_LABELS
     #         }  # Return empty annotations in case of error
-
 
     def annotate(self, text: str) -> List[AnnotationResult]:
         try:
@@ -96,7 +106,6 @@ class SpacyPIIAnnotator(BaseModel):
         except Exception as e:
             logging.error(f"Error processing text for PII annotations: {str(e)}")
             return []  # Return empty list in case of error
-
 
         class Config:
             arbitrary_types_allowed = True

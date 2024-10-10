@@ -80,15 +80,15 @@ class Anonymizer(BaseModel):
 
         return AnonymizationResult(anonymized_text=text, replaced_entities=replacements)
 
-    def _generate_replacement(self, original: str, entity_type: EntityTypes) -> str:
-        """Generate a replacement for the given entity."""
-        if entity_type == EntityTypes.PERSON:
+    def _generate_replacement(self, original: str, entity_type: str) -> str:
+        """Generate a replacement for the given entity based on spaCy's entity types."""
+        if entity_type == "PERSON":
             return f"[PERSON_{secrets.token_hex(4).upper()}]"
-        elif entity_type == EntityTypes.ORGANIZATION:
-            return f"[ORGANIZATION_{secrets.token_hex(4).upper()}]"
-        elif entity_type == EntityTypes.LOCATION:
+        elif entity_type == "ORG":
+            return f"[ORG_{secrets.token_hex(4).upper()}]"
+        elif entity_type in {"GPE", "LOC", "FAC"}:
             return f"[LOCATION_{secrets.token_hex(4).upper()}]"
-        elif entity_type == EntityTypes.DATE:
+        elif entity_type == "DATE":
             return "[REDACTED_DATE]"
         else:
             return f"[{entity_type}_{secrets.token_hex(4).upper()}]"

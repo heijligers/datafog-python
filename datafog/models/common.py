@@ -9,21 +9,32 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
+from enum import Enum
+
 
 class EntityTypes(str, Enum):
-    """PII entity types recognized by DataFog."""
-
+    """Entity types recognized by spaCy."""
     PERSON = "PERSON"
-    LOCATION = "LOCATION"
-    ORGANIZATION = "ORGANIZATION"
-    EMAIL = "email address (containing @)"
-    PHONE_NUMBER = (
-        "phone number (containing numbers and possibly dashes or parentheses)"
-    )
-    DATE = "date (in any format)"
-    NUMBER = "number (in any format)"
-    CREDIT_CARD = "credit card number (in any format)"
-    UNKNOWN = "UNKNOWN"
+    NORP = "NORP"
+    FAC = "FAC"
+    ORG = "ORG"
+    GPE = "GPE"
+    LOC = "LOC"
+    PRODUCT = "PRODUCT"
+    EVENT = "EVENT"
+    WORK_OF_ART = "WORK_OF_ART"
+    LAW = "LAW"
+    LANGUAGE = "LANGUAGE"
+    DATE = "DATE"
+    TIME = "TIME"
+    PERCENT = "PERCENT"
+    MONEY = "MONEY"
+    QUANTITY = "QUANTITY"
+    ORDINAL = "ORDINAL"
+    CARDINAL = "CARDINAL"
+    EMAIL = "EMAIL"
+    PHONE_NUMBER = "PHONE_NUMBER"
+
 
 
 class Pattern(BaseModel):
